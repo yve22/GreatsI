@@ -1,0 +1,27 @@
+class _AddStudentScreenState extends State<AddStudentScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _repo = StudentRepository();
+  File? _imageFile;
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) setState(() => _imageFile = File(picked.path));
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    String? imageUrl;
+    if (_imageFile != null) {
+      imageUrl = await _repo.uploadImage(_imageFile!);
+    }
+
+    await _repo.addStudent(Student(
+      name: _nameController.text,
+      email: _emailController.text,
+      photoUrl: imageUrl,
+    ));
+
+    Navigator.pop(context);
+  }
+}

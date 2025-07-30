@@ -1,29 +1,38 @@
 class StudentListScreen extends StatelessWidget {
-  final List<Student> dummyStudents = [
-    Student(id: '1', name: 'yvee noku', email: 'yvee@school.com'),
-    Student(id: '2', name: 'Jane rufu', email: 'jane@school.com'),
-  ];
+  final StudentRepository _repo = StudentRepository();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Students')),
-      body: ListView.builder(
-        itemCount: dummyStudents.length,
-        itemBuilder: (ctx, index) => ListTile(
-          leading: CircleAvatar(child: Text('${index + 1}')),
-          title: Text(dummyStudents[index].name),
-          subtitle: Text(dummyStudents[index].email),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => StudentDetailScreen(student: dummyStudents[index]),
+      appBar: AppBar(title: const Text('Students')),
+      body: StreamBuilder<List<Student>>(
+        stream: _repo.getStudents(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+          if (!snapshot.hasData) return const CircularProgressIndicator();
+
+          final students = snapshot.data!;
+          return ListView.builder(
+            itemCount: students.length,
+            itemBuilder: (ctx, index) => ListTile(
+              title: Text(students[index].name),
+              subtitle: Text(students[index].email),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => StudentDetailScreen(student: students[index]),
+                ),
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => _repo.deleteStudent(students[index].id!),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => AddStudentScreen()),
